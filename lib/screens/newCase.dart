@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:calendar_date_picker2/calendar_date_picker2.dart';
@@ -14,6 +16,21 @@ class NewCaseScreen extends StatefulWidget {
 
 class _NewCaseScreenState extends State<NewCaseScreen> {
   GlobalKey<FormState> _formKey = GlobalKey();
+  DateTime? registerDate;
+  DateTime? previousDate;
+  DateTime? nextDate;
+
+  openDatePicker() async {
+    var result = await showCalendarDatePicker2Dialog(
+      context: context,
+      config: CalendarDatePicker2WithActionButtonsConfig(),
+      dialogSize: const Size(325, 400),
+      borderRadius: BorderRadius.circular(15),
+    );
+    if (result == null || result.isEmpty) return null;
+    return result[0];
+  }
+
   @override
   Widget build(BuildContext context) {
     var size = MediaQuery.of(context).size;
@@ -33,15 +50,28 @@ class _NewCaseScreenState extends State<NewCaseScreen> {
                     const SizedBox(
                       height: 5,
                     ),
-                    Container(
-                      width: 100,
-                      height: 30,
-                      decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(5),
-                          border: Border.all(
-                              color: Colors.blue,
-                              width: 2,
-                              style: BorderStyle.solid)),
+                    InkWell(
+                      onTap: () async {
+                        registerDate = await openDatePicker();
+                        setState(() {
+                          log(registerDate.toString());
+                        });
+                      },
+                      child: Container(
+                        width: 100,
+                        height: 30,
+                        decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(5),
+                            border: Border.all(
+                                color: Colors.blue,
+                                width: 2,
+                                style: BorderStyle.solid)),
+                        child: Text(
+                          DateFormat.yMd()
+                              .format(registerDate ?? DateTime(2019)),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
                     ),
                     const SizedBox(
                       height: 15,
@@ -368,7 +398,7 @@ class _NewCaseScreenState extends State<NewCaseScreen> {
                         children: [
                           const Expanded(
                               child: Text(
-                            'Previous Date',
+                            'Next Date',
                             textAlign: TextAlign.center,
                           )),
                           SizedBox(
