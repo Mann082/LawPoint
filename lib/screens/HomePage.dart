@@ -24,13 +24,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   final columns = 7;
   final rows = 5;
   late CaseController _controller;
-  List<List<String>> data = [
-    ['1', '2', '3', '4', '5', '6', '7'],
-    ['1', '2', ' 3', ' 4', '5', '6', '7'],
-    ['1', '2', '3', '4', '5', '6', '7'],
-    ['1', '2', '3', '4', '5', '6', '7'],
-    ['1', '2', ' 3', ' 4', '5', '6', '7'],
-  ];
+  List<List<String>> data = [];
   var titleColumn = [
     'Court Name',
     'Case No.',
@@ -40,7 +34,7 @@ class _HomePageState extends ConsumerState<HomePage> {
     'Stage',
     'Next Date'
   ];
-  var titleRow = ['p', 'q', 'r', 's', 't'];
+  var titleRow = [];
 
   String _getDay(int day) {
     switch (day) {
@@ -91,6 +85,31 @@ class _HomePageState extends ConsumerState<HomePage> {
     var selectedDay = ref.watch(DateStateNotifierProvider).selectedDate;
     var loader = ref.watch(CaseStateNotifierProvider).isLoading;
     List<Case> caseforday = ref.watch(CaseStateNotifierProvider).fetchedByDate;
+    log(caseforday.toString());
+    titleRow = [];
+    data = [];
+    for (var case_ in caseforday) {
+      titleRow.add(DateFormat.yMMMd().format(case_.previousDate!));
+      List<String> d = [];
+      d.add(case_.courtName);
+      d.add(case_.caseNo);
+      d.add(case_.party);
+      d.add(case_.particular);
+      d.add(case_.year);
+      d.add(case_.stage);
+      d.add(case_.nextDate == null
+          ? ""
+          : DateFormat.yMMMd().format(case_.nextDate!));
+      data.add(d);
+    }
+
+    int expectedRows = caseforday.length;
+    while (titleRow.length < expectedRows) {
+      titleRow.add('');
+    }
+    while (data.length < expectedRows) {
+      data.add(List<String>.filled(columns, ''));
+    }
     return Scaffold(
       appBar: AppBar(
         actions: [
@@ -126,24 +145,29 @@ class _HomePageState extends ConsumerState<HomePage> {
         child: const Icon(Icons.add),
       ),
       drawer: const Drawer(),
-      body: Column(
-        children: [
-          Expanded(
-            child: Center(
-              child: (loader)
-                  ? const CircularProgressIndicator()
-                  : StickyHeadersTable(
-                      columnsLength: columns,
-                      rowsLength: rows,
-                      columnsTitleBuilder: (i) => Text(titleColumn[i]),
-                      rowsTitleBuilder: (i) => Text(titleRow[i]),
-                      contentCellBuilder: (j, i) => Text(data[i][j].toString()),
-                      legendCell: const Text('Previous Date'),
-                    ),
+      body: (caseforday.isEmpty)
+          ? Center(
+              child: Text("No cases for the day"),
+            )
+          : Column(
+              children: [
+                Expanded(
+                  child: Center(
+                    child: (loader)
+                        ? const CircularProgressIndicator()
+                        : StickyHeadersTable(
+                            columnsLength: columns,
+                            rowsLength: expectedRows,
+                            columnsTitleBuilder: (i) => Text(titleColumn[i]),
+                            rowsTitleBuilder: (i) => Text(titleRow[i]),
+                            contentCellBuilder: (j, i) =>
+                                Text(data[i][j].toString()),
+                            legendCell: const Text('Previous Date'),
+                          ),
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -167,7 +191,6 @@ class _DialogBoxState extends ConsumerState<DialogBox> {
   @override
   Widget build(BuildContext context) {
     var dateCase = ref.watch(CaseStateNotifierProvider).dateCase;
-    log(dateCase.toString());
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.all(0),
@@ -203,56 +226,126 @@ class _DialogBoxState extends ConsumerState<DialogBox> {
                 todayBuilder: (context, day, focusedDay) {
                   if (isSameDay(day, _focusedDay)) {
                     return Center(
-                      child: CircleAvatar(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                        child: Text(day.day.toString()),
-                      ),
-                    );
+                        child:
+                            (dateCase[DateTime(day.year, day.month, day.day)] ==
+                                    null)
+                                ? CircleAvatar(
+                                    backgroundColor: Colors.red,
+                                    foregroundColor: Colors.white,
+                                    child: Text(day.day.toString()),
+                                  )
+                                : Badge(
+                                    backgroundColor: Colors.white,
+                                    textColor: Colors.black,
+                                    // largeSize: 20,
+                                    label: (dateCase[DateTime(day.year,
+                                                day.month, day.day)] ==
+                                            null)
+                                        ? SizedBox()
+                                        : Text(dateCase[DateTime(
+                                                day.year, day.month, day.day)]!
+                                            .length
+                                            .toString()),
+                                    child: CircleAvatar(
+                                      backgroundColor: Colors.red,
+                                      foregroundColor: Colors.white,
+                                      child: Text(day.day.toString()),
+                                    ),
+                                  ));
                   }
                   return Container(
                     margin: const EdgeInsets.all(5),
                     child: Center(
-                      child: Badge(
-                        // isLabelVisible: true,
-                        // label: Text(dateCase[day]!.length.toString()),
-                        child: CircleAvatar(
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
-                          child: Text(day.day.toString()),
-                        ),
-                      ),
+                      child:
+                          (dateCase[DateTime(day.year, day.month, day.day)] ==
+                                  null)
+                              ? CircleAvatar(
+                                  backgroundColor: Colors.blue,
+                                  foregroundColor: Colors.white,
+                                  child: Text(day.day.toString()),
+                                )
+                              : Badge(
+                                  backgroundColor: Colors.white,
+                                  textColor: Colors.black,
+                                  // largeSize: 20,
+                                  label: (dateCase[DateTime(
+                                              day.year, day.month, day.day)] ==
+                                          null)
+                                      ? SizedBox()
+                                      : Text(dateCase[DateTime(
+                                              day.year, day.month, day.day)]!
+                                          .length
+                                          .toString()),
+                                  child: CircleAvatar(
+                                    backgroundColor: Colors.blue,
+                                    foregroundColor: Colors.white,
+                                    child: Text(day.day.toString()),
+                                  ),
+                                ),
                     ),
                   );
                 },
                 defaultBuilder: (context, day, focusedDay) {
-                  log((dateCase[DateTime(day.year, day.month, day.day)] == null)
-                      ? "0"
-                      : dateCase[DateTime(day.year, day.month, day.day)]!
-                          .length
-                          .toString());
                   if (isSameDay(day, _focusedDay)) {
                     return Center(
-                      child: Badge(
-                        // isLabelVisible: true,
-                        // label: Text(dateCase[day]!.length.toString()),
-                        child: CircleAvatar(
-                          backgroundColor: Colors.red,
-                          foregroundColor: Colors.white,
-                          child: Text(day.day.toString()),
-                        ),
-                      ),
+                      child:
+                          (dateCase[DateTime(day.year, day.month, day.day)] ==
+                                  null)
+                              ? CircleAvatar(
+                                  backgroundColor: Colors.red,
+                                  foregroundColor: Colors.white,
+                                  child: Text(day.day.toString()),
+                                )
+                              : Badge(
+                                  backgroundColor: Colors.white,
+                                  textColor: Colors.black,
+                                  // largeSize: 20,
+                                  label: (dateCase[DateTime(
+                                              day.year, day.month, day.day)] ==
+                                          null)
+                                      ? SizedBox()
+                                      : Text(dateCase[DateTime(
+                                              day.year, day.month, day.day)]!
+                                          .length
+                                          .toString()),
+                                  child: CircleAvatar(
+                                    backgroundColor: Colors.red,
+                                    foregroundColor: Colors.white,
+                                    child: Text(day.day.toString()),
+                                  ),
+                                ),
                     );
                   }
                   if (isSameDay(day, DateTime.now())) {
                     return Container(
                       margin: const EdgeInsets.all(5),
                       child: Center(
-                        child: CircleAvatar(
-                          backgroundColor: Colors.blue,
-                          foregroundColor: Colors.white,
-                          child: Text(day.day.toString()),
-                        ),
+                        child:
+                            (dateCase[DateTime(day.year, day.month, day.day)] ==
+                                    null)
+                                ? CircleAvatar(
+                                    backgroundColor: Colors.blue,
+                                    foregroundColor: Colors.white,
+                                    child: Text(day.day.toString()),
+                                  )
+                                : Badge(
+                                    backgroundColor: Colors.white,
+                                    textColor: Colors.black,
+                                    // largeSize: 20,
+                                    label: (dateCase[DateTime(day.year,
+                                                day.month, day.day)] ==
+                                            null)
+                                        ? SizedBox()
+                                        : Text(dateCase[DateTime(
+                                                day.year, day.month, day.day)]!
+                                            .length
+                                            .toString()),
+                                    child: CircleAvatar(
+                                      backgroundColor: Colors.blue,
+                                      foregroundColor: Colors.white,
+                                      child: Text(day.day.toString()),
+                                    ),
+                                  ),
                       ),
                     );
                   }
@@ -268,6 +361,7 @@ class _DialogBoxState extends ConsumerState<DialogBox> {
                               : Badge(
                                   backgroundColor: Colors.white,
                                   textColor: Colors.black,
+                                  // largeSize: 20,
                                   label: (dateCase[DateTime(
                                               day.year, day.month, day.day)] ==
                                           null)

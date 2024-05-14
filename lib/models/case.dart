@@ -20,11 +20,11 @@ class CasesState with ChangeNotifier {
       Map<DateTime, List<Case>>? dateCase_,
       bool? isLoading_}) {
     return CasesState(
-        PrevDates: PrevDates_ ?? [],
-        allCases: allCases_ ?? [],
-        fetchedByDate: fetchedByDate_ ?? [],
-        dateCase: dateCase_ ?? {},
-        isLoading: isLoading_ ?? false);
+        PrevDates: PrevDates_ ?? this.PrevDates,
+        allCases: allCases_ ?? this.allCases,
+        fetchedByDate: fetchedByDate_ ?? this.fetchedByDate,
+        dateCase: dateCase_ ?? this.dateCase,
+        isLoading: isLoading_ ?? this.isLoading);
   }
 }
 
@@ -50,4 +50,9 @@ class Case {
       required this.stage,
       required this.year,
       required this.registrationDate});
+
+  @override
+  String toString() {
+    return 'Case(id: $id, previousDate: $previousDate, courtName: $courtName, caseNo: $caseNo, party: $party, year: $year, stage: $stage, nextDate: $nextDate, particular: $particular, registrationDate: $registrationDate)';
+  }
 }
