@@ -1,7 +1,12 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
+import 'package:lawyers_diary/controllers/case_controller.dart';
+import 'package:lawyers_diary/models/case.dart';
 import 'package:lawyers_diary/models/date.dart';
+import 'package:lawyers_diary/providers/case_provider.dart';
 import 'package:lawyers_diary/providers/date_provider.dart';
 import 'package:lawyers_diary/screens/newCase.dart';
 import 'package:table_calendar/table_calendar.dart';
@@ -18,6 +23,7 @@ class HomePage extends ConsumerStatefulWidget {
 class _HomePageState extends ConsumerState<HomePage> {
   final columns = 7;
   final rows = 5;
+  late CaseController _controller;
   List<List<String>> data = [
     ['1', '2', '3', '4', '5', '6', '7'],
     ['1', '2', ' 3', ' 4', '5', '6', '7'],
@@ -57,6 +63,19 @@ class _HomePageState extends ConsumerState<HomePage> {
     }
   }
 
+  bool _isInit = true;
+
+  @override
+  void didChangeDependencies() {
+    if (_isInit) {
+      _controller = CaseController(ref: ref);
+      log("didChangeDependencies is called");
+      _controller.fetchAndSetAllCases();
+      _isInit = false;
+    }
+    super.didChangeDependencies();
+  }
+
   void pickDate(WidgetRef ref) {
     showDialog(
       context: context,
@@ -69,7 +88,9 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     // final selectedDay = Provider.of<DateData>(context).selectedDate;
-    final selectedDay = ref.watch(DateStateNotifierProvider).selectedDate;
+    var selectedDay = ref.watch(DateStateNotifierProvider).selectedDate;
+    var loader = ref.watch(CaseStateNotifierProvider).isLoading;
+    List<Case> caseforday = ref.watch(CaseStateNotifierProvider).fetchedByDate;
     return Scaffold(
       appBar: AppBar(
         actions: [
@@ -109,14 +130,16 @@ class _HomePageState extends ConsumerState<HomePage> {
         children: [
           Expanded(
             child: Center(
-              child: StickyHeadersTable(
-                columnsLength: columns,
-                rowsLength: rows,
-                columnsTitleBuilder: (i) => Text(titleColumn[i]),
-                rowsTitleBuilder: (i) => Text(titleRow[i]),
-                contentCellBuilder: (j, i) => Text(data[i][j].toString()),
-                legendCell: const Text('Previous Date'),
-              ),
+              child: (loader)
+                  ? const CircularProgressIndicator()
+                  : StickyHeadersTable(
+                      columnsLength: columns,
+                      rowsLength: rows,
+                      columnsTitleBuilder: (i) => Text(titleColumn[i]),
+                      rowsTitleBuilder: (i) => Text(titleRow[i]),
+                      contentCellBuilder: (j, i) => Text(data[i][j].toString()),
+                      legendCell: const Text('Previous Date'),
+                    ),
             ),
           ),
         ],
@@ -125,18 +148,26 @@ class _HomePageState extends ConsumerState<HomePage> {
   }
 }
 
-class DialogBox extends StatefulWidget {
+class DialogBox extends ConsumerStatefulWidget {
   WidgetRef ref;
   DialogBox(this.ref);
   @override
-  State<DialogBox> createState() => _DialogBoxState();
+  ConsumerState<DialogBox> createState() => _DialogBoxState();
 }
 
-class _DialogBoxState extends State<DialogBox> {
+class _DialogBoxState extends ConsumerState<DialogBox> {
+  late DateTime _focusedDay;
+
+  @override
+  void initState() {
+    super.initState();
+    _focusedDay = ref.read(DateStateNotifierProvider).selectedDate;
+  }
+
   @override
   Widget build(BuildContext context) {
-    var selectedDay = widget.ref.watch(DateStateNotifierProvider).selectedDate;
-    var _focusedDay = selectedDay;
+    var dateCase = ref.watch(CaseStateNotifierProvider).dateCase;
+    log(dateCase.toString());
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.all(0),
@@ -156,10 +187,13 @@ class _DialogBoxState extends State<DialogBox> {
               onDaySelected: (selectedDay, focusedDay) {
                 setState(() {
                   _focusedDay = focusedDay;
-                  widget.ref
-                      .watch(DateStateNotifierProvider.notifier)
-                      .setDate(_focusedDay);
                 });
+                ref
+                    .read(DateStateNotifierProvider.notifier)
+                    .setDate(selectedDay);
+                ref
+                    .read(CaseStateNotifierProvider.notifier)
+                    .fetchByDate(selectedDay);
               },
               headerStyle: const HeaderStyle(
                 formatButtonVisible: false,
@@ -167,7 +201,7 @@ class _DialogBoxState extends State<DialogBox> {
               ),
               calendarBuilders: CalendarBuilders(
                 todayBuilder: (context, day, focusedDay) {
-                  if (isSameDay(day, selectedDay)) {
+                  if (isSameDay(day, _focusedDay)) {
                     return Center(
                       child: CircleAvatar(
                         backgroundColor: Colors.red,
@@ -179,21 +213,34 @@ class _DialogBoxState extends State<DialogBox> {
                   return Container(
                     margin: const EdgeInsets.all(5),
                     child: Center(
-                      child: CircleAvatar(
-                        backgroundColor: Colors.blue,
-                        foregroundColor: Colors.white,
-                        child: Text(day.day.toString()),
+                      child: Badge(
+                        // isLabelVisible: true,
+                        // label: Text(dateCase[day]!.length.toString()),
+                        child: CircleAvatar(
+                          backgroundColor: Colors.blue,
+                          foregroundColor: Colors.white,
+                          child: Text(day.day.toString()),
+                        ),
                       ),
                     ),
                   );
                 },
                 defaultBuilder: (context, day, focusedDay) {
-                  if (isSameDay(day, selectedDay)) {
+                  log((dateCase[DateTime(day.year, day.month, day.day)] == null)
+                      ? "0"
+                      : dateCase[DateTime(day.year, day.month, day.day)]!
+                          .length
+                          .toString());
+                  if (isSameDay(day, _focusedDay)) {
                     return Center(
-                      child: CircleAvatar(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                        child: Text(day.day.toString()),
+                      child: Badge(
+                        // isLabelVisible: true,
+                        // label: Text(dateCase[day]!.length.toString()),
+                        child: CircleAvatar(
+                          backgroundColor: Colors.red,
+                          foregroundColor: Colors.white,
+                          child: Text(day.day.toString()),
+                        ),
                       ),
                     );
                   }
@@ -212,7 +259,27 @@ class _DialogBoxState extends State<DialogBox> {
                   return Container(
                     margin: EdgeInsets.all(3),
                     child: Center(
-                      child: CircleAvatar(child: Text(day.day.toString())),
+                      child:
+                          (dateCase[DateTime(day.year, day.month, day.day)] ==
+                                  null)
+                              ? CircleAvatar(
+                                  child: Text(day.day.toString()),
+                                )
+                              : Badge(
+                                  backgroundColor: Colors.white,
+                                  textColor: Colors.black,
+                                  label: (dateCase[DateTime(
+                                              day.year, day.month, day.day)] ==
+                                          null)
+                                      ? SizedBox()
+                                      : Text(dateCase[DateTime(
+                                              day.year, day.month, day.day)]!
+                                          .length
+                                          .toString()),
+                                  child: CircleAvatar(
+                                    child: Text(day.day.toString()),
+                                  ),
+                                ),
                     ),
                   );
                 },

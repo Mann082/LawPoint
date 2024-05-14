@@ -10,44 +10,49 @@ class CaseController {
   CaseController({required this.ref});
 
   Future<void> fetchAndSetAllCases() async {
-    ref.watch(CaseStateNotifierProvider.notifier).setLoaderValue(true);
-    List<Case> allCases = [];
-    const endpoint =
-        "https://lawyer-handbook-25bc2-default-rtdb.asia-southeast1.firebasedatabase.app/cases.json";
+    log("fetchAndSetallcases");
     try {
+      ref.watch(CaseStateNotifierProvider.notifier).setLoaderValue(true);
+      List<Case> allCases = [];
+      const endpoint =
+          "https://lawyer-handbook-25bc2-default-rtdb.asia-southeast1.firebasedatabase.app/cases.json";
       final url = Uri.parse(endpoint);
       final response = await http.get(url);
-      final resBody = jsonDecode(response.body);
+      var resBody = jsonDecode(response.body);
       log(resBody.toString());
-      for (var item in resBody) {
-        var id = item.key;
-        var data = item.value;
+      for (var item in resBody.values) {
+        var id = item['caseNo']; // Assuming caseNo is the ID
+        var data = item;
         var dates = data['dates'];
-        for (int i = 1; i < dates.size(); i++) {
+        for (int i = 1; i < dates.length; i++) {
           allCases.add(Case(
-              id: id,
-              caseNo: data['caseNo'],
-              courtName: data['courtName'],
-              party: data['party'],
-              nextDate: DateTime.parse(dates[i]),
-              particular: data['particular'],
-              previousDate: DateTime.parse(dates[i - 1]),
-              stage: data['stage'],
-              year: data['year'],
-              registrationDate: dates[0]));
-        }
-        allCases.add(Case(
             id: id,
             caseNo: data['caseNo'],
             courtName: data['courtName'],
             party: data['party'],
-            nextDate: null,
+            nextDate: DateTime.parse(dates[i]),
             particular: data['particular'],
-            previousDate: DateTime.parse(dates[dates.size() - 1]),
+            previousDate: DateTime.parse(dates[i - 1]),
             stage: data['stage'],
             year: data['year'],
-            registrationDate: dates[0]));
+            registrationDate: DateTime.parse(dates[0]),
+          ));
+        }
+        // Add the last case with nextDate as null
+        allCases.add(Case(
+          id: id,
+          caseNo: data['caseNo'],
+          courtName: data['courtName'],
+          party: data['party'],
+          nextDate: null,
+          particular: data['particular'],
+          previousDate: DateTime.parse(dates.last),
+          stage: data['stage'],
+          year: data['year'],
+          registrationDate: DateTime.parse(dates[0]),
+        ));
       }
+
       ref
           .watch(CaseStateNotifierProvider.notifier)
           .allCasesListUpdate(allCases);
@@ -55,19 +60,21 @@ class CaseController {
 
       ref.watch(CaseStateNotifierProvider.notifier).setLoaderValue(false);
     } catch (err) {
-      log(err.toString());
+      log("Error caught is : ${err.toString()}");
 
       ref.watch(CaseStateNotifierProvider.notifier).setLoaderValue(false);
     }
 
     ref.watch(CaseStateNotifierProvider.notifier).setLoaderValue(false);
-    // notifyListeners();
   }
 
   void setDateCase() {
     Map<DateTime, List<Case>> dateCase = {};
     var allCases = ref.watch(CaseStateNotifierProvider).allCases;
     for (var item in allCases) {
+      if (!dateCase.containsKey(item.previousDate)) {
+        dateCase[item.previousDate!] = [];
+      }
       dateCase[item.previousDate]!.add(item);
     }
     ref.watch(CaseStateNotifierProvider.notifier).dateCaseUpdate(dateCase);

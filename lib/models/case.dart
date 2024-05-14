@@ -1,8 +1,4 @@
-import 'dart:convert';
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
 class CasesState with ChangeNotifier {
   List<Case> allCases;
@@ -24,10 +20,10 @@ class CasesState with ChangeNotifier {
       Map<DateTime, List<Case>>? dateCase_,
       bool? isLoading_}) {
     return CasesState(
-        PrevDates: PrevDates ?? [],
-        allCases: allCases ?? [],
-        fetchedByDate: fetchedByDate ?? [],
-        dateCase: dateCase ?? {},
+        PrevDates: PrevDates_ ?? [],
+        allCases: allCases_ ?? [],
+        fetchedByDate: fetchedByDate_ ?? [],
+        dateCase: dateCase_ ?? {},
         isLoading: isLoading_ ?? false);
   }
 }

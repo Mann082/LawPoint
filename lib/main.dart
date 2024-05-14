@@ -5,10 +5,11 @@ import 'package:lawyers_diary/screens/HomePage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lawyers_diary/screens/newCase.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:lawyers_diary/utils/logger.dart';
 
 void main() {
-  initializeDateFormatting()
-      .then((_) => runApp(const ProviderScope(child: const LawyersDiary())));
+  initializeDateFormatting().then((_) => runApp(
+      ProviderScope(observers: [Logger()], child: const LawyersDiary())));
 }
 
 class LawyersDiary extends StatelessWidget {

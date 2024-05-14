@@ -26,6 +26,12 @@ class CaseNotifier extends StateNotifier<CasesState> {
     state = state.copyWith(dateCase_: newData);
   }
 
+  void fetchByDate(DateTime date) {
+    state = state.copyWith(fetchedByDate_: state.dateCase[date]);
+    log("fetched by date");
+    log(state.dateCase.toString());
+  }
+
   void setLoaderValue(bool value) {
     log("its $value");
     state.isLoading = value;
