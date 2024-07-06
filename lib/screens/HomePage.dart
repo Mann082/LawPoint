@@ -170,11 +170,19 @@ class _HomePageState extends ConsumerState<HomePage> {
                   child: const CircularProgressIndicator()),
             )
           : Column(
-              crossAxisAlignment: CrossAxisAlignment.center,
+              // crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                    "Undated Cases : ${unDatedCases(caseforMonth).toString()}"),
+                Container(
+                  height: 50,
+                  color: Colors.black,
+                  child: Center(
+                    child: Text(
+                      "Undated Cases : ${unDatedCases(caseforMonth).toString()}",
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ),
+                ),
                 Expanded(
                   child: (caseforday.isEmpty)
                       ? const Center(
@@ -250,11 +258,13 @@ class _HomePageState extends ConsumerState<HomePage> {
                                     },
                                     child: Container(
                                       height: 50,
-                                      child: Text(
-                                        e.caseNo.toString(),
-                                        style:
-                                            const TextStyle(color: Colors.blue),
-                                        textAlign: TextAlign.center,
+                                      child: Center(
+                                        child: Text(
+                                          e.caseNo.toString(),
+                                          style: const TextStyle(
+                                              color: Colors.blue),
+                                          textAlign: TextAlign.center,
+                                        ),
                                       ),
                                     ),
                                   ),
@@ -315,7 +325,7 @@ class _DialogBoxState extends ConsumerState<DialogBox> {
           ),
           child: Container(
             padding: const EdgeInsets.all(15),
-            height: MediaQuery.of(context).size.height * 0.6,
+            height: MediaQuery.of(context).size.height * 0.65,
             width: MediaQuery.of(context).size.width * 0.9,
             child: TableCalendar(
               focusedDay: _focusedDay,
