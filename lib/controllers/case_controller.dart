@@ -1,18 +1,21 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:lawyers_diary/models/case.dart';
 import 'package:lawyers_diary/providers/case_provider.dart';
+import 'package:lawyers_diary/utils/alert_dialogue.dart';
 
 class CaseController {
   WidgetRef ref;
-  CaseController({required this.ref});
+  BuildContext context;
+  CaseController({required this.ref, required this.context});
 
   Future<void> fetchAndSetAllCases() async {
     log("fetchAndSetallcases");
     try {
-      ref.watch(CaseStateNotifierProvider.notifier).setLoaderValue(true);
+      ref.read(CaseStateNotifierProvider.notifier).setLoaderValue(true);
       List<Case> allCases = [];
       const endpoint =
           "https://lawyer-handbook-25bc2-default-rtdb.asia-southeast1.firebasedatabase.app/cases.json";
@@ -20,9 +23,10 @@ class CaseController {
       final response = await http.get(url);
       var resBody = jsonDecode(response.body);
       log(resBody.toString());
-      for (var item in resBody.values) {
-        var id = item['caseNo']; // Assuming caseNo is the ID
-        var data = item;
+      for (var item in resBody.keys) {
+        var id = item;
+        log(id);
+        var data = resBody[item];
         var dates = data['dates'];
         for (int i = 1; i < dates.length; i++) {
           allCases.add(Case(
@@ -53,31 +57,52 @@ class CaseController {
         ));
       }
 
-      ref
-          .watch(CaseStateNotifierProvider.notifier)
-          .allCasesListUpdate(allCases);
+      ref.read(CaseStateNotifierProvider.notifier).allCasesListUpdate(allCases);
       setDateCase();
+      setMonthCase();
 
-      ref.watch(CaseStateNotifierProvider.notifier).setLoaderValue(false);
+      ref.read(CaseStateNotifierProvider.notifier).setLoaderValue(false);
+      // await showAlertDialogue(
+      //     context: context,
+      //     title: "Api Call Successfull",
+      //     body: "Status Code : ${response.statusCode}");
     } catch (err) {
       log("Error caught is : ${err.toString()}");
+      await showAlertDialogue(
+          context: context,
+          title: "Api Fail",
+          body: "Error caught is : ${err.toString()}");
 
-      ref.watch(CaseStateNotifierProvider.notifier).setLoaderValue(false);
+      ref.read(CaseStateNotifierProvider.notifier).setLoaderValue(false);
     }
 
-    ref.watch(CaseStateNotifierProvider.notifier).setLoaderValue(false);
+    ref.read(CaseStateNotifierProvider.notifier).setLoaderValue(false);
   }
 
   void setDateCase() {
     Map<DateTime, List<Case>> dateCase = {};
-    var allCases = ref.watch(CaseStateNotifierProvider).allCases;
+    var allCases = ref.read(CaseStateNotifierProvider).allCases;
     for (var item in allCases) {
       if (!dateCase.containsKey(item.previousDate)) {
         dateCase[item.previousDate!] = [];
       }
       dateCase[item.previousDate]!.add(item);
     }
-    ref.watch(CaseStateNotifierProvider.notifier).dateCaseUpdate(dateCase);
+    ref.read(CaseStateNotifierProvider.notifier).dateCaseUpdate(dateCase);
+  }
+
+  void setMonthCase() {
+    Map<String, List<Case>> monthCase = {};
+    var allCases = ref.read(CaseStateNotifierProvider).allCases;
+    for (var item in allCases) {
+      String key = item.previousDate!.month.toString() +
+          item.previousDate!.year.toString();
+      if (!monthCase.containsKey(key)) {
+        monthCase[key] = [];
+      }
+      monthCase[key]!.add(item);
+    }
+    ref.read(CaseStateNotifierProvider.notifier).monthCaseUpdate(monthCase);
   }
 
   Future<void> createNewCase(
@@ -90,7 +115,7 @@ class CaseController {
       required DateTime? nextDate,
       required DateTime registrationDate,
       required String particular}) async {
-    ref.watch(CaseStateNotifierProvider.notifier).setLoaderValue(true);
+    ref.read(CaseStateNotifierProvider.notifier).setLoaderValue(true);
     var endpoint =
         "https://lawyer-handbook-25bc2-default-rtdb.asia-southeast1.firebasedatabase.app/cases.json";
     try {
@@ -119,10 +144,10 @@ class CaseController {
       log(resData.toString());
       await fetchAndSetAllCases();
       setDateCase();
-      ref.watch(CaseStateNotifierProvider.notifier).setLoaderValue(false);
+      ref.read(CaseStateNotifierProvider.notifier).setLoaderValue(false);
     } catch (err) {
       log(err.toString());
-      ref.watch(CaseStateNotifierProvider.notifier).setLoaderValue(false);
+      ref.read(CaseStateNotifierProvider.notifier).setLoaderValue(false);
     }
   }
 }

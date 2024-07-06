@@ -26,6 +26,16 @@ class CaseNotifier extends StateNotifier<CasesState> {
     state = state.copyWith(dateCase_: newData);
   }
 
+  void monthCaseUpdate(Map<String, List<Case>> newData) {
+    log(newData.toString());
+    state = state.copyWith(monthCase_: newData);
+  }
+
+  void SelectedCaseUpdate(Case newcase) {
+    log("Selected CAse updated");
+    state = state.copyWith(selectedCase_: newcase);
+  }
+
   void fetchByDate(DateTime date) {
     DateTime newDate = DateTime(date.year, date.month, date.day);
     List<Case> data = state.dateCase[newDate] ?? [];
@@ -34,15 +44,18 @@ class CaseNotifier extends StateNotifier<CasesState> {
     log(data.toString());
   }
 
+  void fetchByMonth(DateTime date) {
+    String key = date.month.toString() + date.year.toString();
+    List<Case> data = state.monthCase[key] ?? [];
+    state = state.copyWith(fetchedByMonth_: data);
+    log("Fetched by Month");
+    log(data.toString());
+  }
+
   void setLoaderValue(bool value) {
     log("its $value");
     state.isLoading = value;
   }
-
-  // void selectedEmployeeIndex(int value) {
-  //   state.selectedEmployeeIndex = value;
-  //   log("Selected Index: $value");
-  // }
 }
 
 final CaseStateNotifierProvider =

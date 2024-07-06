@@ -3,8 +3,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:lawyers_diary/models/case.dart';
 import 'package:lawyers_diary/screens/HomePage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:lawyers_diary/screens/caseDetailsScreen.dart';
 import 'package:lawyers_diary/screens/newCase.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:lawyers_diary/screens/testScreen.dart';
 import 'package:lawyers_diary/utils/logger.dart';
 
 void main() {
@@ -32,7 +34,9 @@ class App extends StatelessWidget {
       title: "Lawyer's Diary and HandBook",
       routes: {
         HomePage.routeName: (context) => const HomePage(),
-        NewCaseScreen.routeName: (context) => const NewCaseScreen()
+        NewCaseScreen.routeName: (context) => const NewCaseScreen(),
+        Casedetailsscreen.routeName: (context) => const Casedetailsscreen(),
+        TestScreen.routeName: (context) => const TestScreen()
       },
       initialRoute: HomePage.routeName,
       theme: ThemeData(

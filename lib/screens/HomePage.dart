@@ -8,6 +8,7 @@ import 'package:lawyers_diary/models/case.dart';
 import 'package:lawyers_diary/models/date.dart';
 import 'package:lawyers_diary/providers/case_provider.dart';
 import 'package:lawyers_diary/providers/date_provider.dart';
+import 'package:lawyers_diary/screens/caseDetailsScreen.dart';
 import 'package:lawyers_diary/screens/newCase.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:table_sticky_headers/table_sticky_headers.dart';
@@ -62,12 +63,26 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   void didChangeDependencies() {
     if (_isInit) {
-      _controller = CaseController(ref: ref);
+      _controller = CaseController(ref: ref, context: context);
       log("didChangeDependencies is called");
       _controller.fetchAndSetAllCases();
       _isInit = false;
     }
     super.didChangeDependencies();
+  }
+
+  int disposeCases(List<Case> data) {
+    return 0;
+  }
+
+  int unDatedCases(List<Case> data) {
+    int i = 0;
+    for (var item in data) {
+      if (item.nextDate == null) {
+        i++;
+      }
+    }
+    return i;
   }
 
   void pickDate(WidgetRef ref) {
@@ -81,10 +96,12 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    // final selectedDay = Provider.of<DateData>(context).selectedDate;
+    log('build is called');
     var selectedDay = ref.watch(DateStateNotifierProvider).selectedDate;
     var loader = ref.watch(CaseStateNotifierProvider).isLoading;
     List<Case> caseforday = ref.watch(CaseStateNotifierProvider).fetchedByDate;
+    List<Case> caseforMonth =
+        ref.watch(CaseStateNotifierProvider).fetchedByMonth;
     log(caseforday.toString());
     titleRow = [];
     data = [];
@@ -145,27 +162,125 @@ class _HomePageState extends ConsumerState<HomePage> {
         child: const Icon(Icons.add),
       ),
       drawer: const Drawer(),
-      body: (caseforday.isEmpty)
-          ? Center(
-              child: Text("No cases for the day"),
+      body: (loader)
+          ? const Center(
+              child: SizedBox(
+                  height: 30,
+                  width: 30,
+                  child: const CircularProgressIndicator()),
             )
           : Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                Text(
+                    "Undated Cases : ${unDatedCases(caseforMonth).toString()}"),
                 Expanded(
-                  child: Center(
-                    child: (loader)
-                        ? const CircularProgressIndicator()
-                        : StickyHeadersTable(
-                            columnsLength: columns,
-                            rowsLength: expectedRows,
-                            columnsTitleBuilder: (i) => Text(titleColumn[i]),
-                            rowsTitleBuilder: (i) => Text(titleRow[i]),
-                            contentCellBuilder: (j, i) =>
-                                Text(data[i][j].toString()),
-                            legendCell: const Text('Previous Date'),
-                          ),
-                  ),
-                ),
+                  child: (caseforday.isEmpty)
+                      ? const Center(
+                          child: Text("No cases for the day"),
+                        )
+                      : Table(
+                          border: TableBorder.all(),
+                          columnWidths: const <int, TableColumnWidth>{
+                            0: FlexColumnWidth(),
+                            1: FlexColumnWidth(),
+                            2: FlexColumnWidth(),
+                          },
+                          defaultVerticalAlignment:
+                              TableCellVerticalAlignment.middle,
+                          children: [
+                            TableRow(
+                              children: <Widget>[
+                                Container(
+                                  color: Colors.grey,
+                                  height: 50,
+                                  child: const Center(
+                                    child: Text(
+                                      'Next Date',
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  color: Colors.grey,
+                                  height: 50,
+                                  child: const Center(
+                                    child: Text(
+                                      'Case Number',
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ),
+                                Container(
+                                  color: Colors.grey,
+                                  height: 50,
+                                  child: const Center(
+                                    child: Text(
+                                      'Name of Party',
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            ...caseforday.map((e) {
+                              return TableRow(
+                                children: <Widget>[
+                                  Container(
+                                    height: 50,
+                                    child: Center(
+                                      child: Text(
+                                        e.nextDate == null
+                                            ? ""
+                                            : DateFormat.yMMMd()
+                                                .format(e.nextDate!),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ),
+                                  InkWell(
+                                    onTap: () {
+                                      ref
+                                          .read(CaseStateNotifierProvider
+                                              .notifier)
+                                          .SelectedCaseUpdate(e);
+                                      Navigator.of(context).pushNamed(
+                                          Casedetailsscreen.routeName);
+                                    },
+                                    child: Container(
+                                      height: 50,
+                                      child: Text(
+                                        e.caseNo.toString(),
+                                        style:
+                                            const TextStyle(color: Colors.blue),
+                                        textAlign: TextAlign.center,
+                                      ),
+                                    ),
+                                  ),
+                                  Container(
+                                    child: Text(
+                                      e.party,
+                                      textAlign: TextAlign.center,
+                                    ),
+                                  ),
+                                ],
+                              );
+                            })
+                          ],
+                        ),
+                )
+                // Center(
+                //     child: StickyHeadersTable(
+                //       columnsLength: columns,
+                //       rowsLength: expectedRows,
+                //       columnsTitleBuilder: (i) => Text(titleColumn[i]),
+                //       rowsTitleBuilder: (i) => Text(titleRow[i]),
+                //       contentCellBuilder: (j, i) =>
+                //           Text(data[i][j].toString()),
+                //       legendCell: const Text('Previous Date'),
+                //     ),
+                //   ),
               ],
             ),
     );
@@ -217,6 +332,9 @@ class _DialogBoxState extends ConsumerState<DialogBox> {
                 ref
                     .read(CaseStateNotifierProvider.notifier)
                     .fetchByDate(selectedDay);
+                ref
+                    .read(CaseStateNotifierProvider.notifier)
+                    .fetchByMonth(selectedDay);
               },
               headerStyle: const HeaderStyle(
                 formatButtonVisible: false,

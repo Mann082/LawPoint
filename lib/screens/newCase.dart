@@ -69,7 +69,7 @@ class _NewCaseScreenState extends ConsumerState<NewCaseScreen> {
 
   @override
   Widget build(BuildContext context) {
-    CaseController _controller = CaseController(ref: ref);
+    CaseController _controller = CaseController(ref: ref, context: context);
     var isLoading = ref.watch(CaseStateNotifierProvider).isLoading;
     var size = MediaQuery.of(context).size;
     return Scaffold(
