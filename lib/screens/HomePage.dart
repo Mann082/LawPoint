@@ -96,7 +96,7 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    log('build is called');
+    log('homepage build is called');
     var selectedDay = ref.watch(DateStateNotifierProvider).selectedDate;
     var loader = ref.watch(CaseStateNotifierProvider).isLoading;
     List<Case> caseforday = ref.watch(CaseStateNotifierProvider).fetchedByDate;

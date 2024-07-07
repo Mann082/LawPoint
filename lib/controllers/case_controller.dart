@@ -143,7 +143,54 @@ class CaseController {
       var resData = jsonDecode(response.body);
       log(resData.toString());
       await fetchAndSetAllCases();
-      setDateCase();
+      ref.read(CaseStateNotifierProvider.notifier).setLoaderValue(false);
+    } catch (err) {
+      log(err.toString());
+      ref.read(CaseStateNotifierProvider.notifier).setLoaderValue(false);
+    }
+  }
+
+  Future<void> updateCase(
+      {String? courtName,
+      String? caseNo,
+      String? party,
+      String? year,
+      String? stage,
+      String? particular}) async {
+    Case? selectedCase = ref.read(CaseStateNotifierProvider).SelectedCase;
+    ref.read(CaseStateNotifierProvider.notifier).setLoaderValue(true);
+    try {
+      var endpoint =
+          "https://lawyer-handbook-25bc2-default-rtdb.asia-southeast1.firebasedatabase.app/cases/${selectedCase!.id}.json";
+      // var caseData = {
+      //   'courtName': courtName ?? selectedCase.courtName,
+      //   'caseNo': caseNo ?? selectedCase.caseNo,
+      //   'party': party ?? selectedCase.party,
+      //   'year': year ?? selectedCase.year,
+      //   'stage': stage ?? selectedCase.stage,
+      //   'particular': particular ?? selectedCase.particular
+      // };
+      var caseData = {};
+      if (courtName != null && courtName != "")
+        caseData['courtName'] = courtName;
+      if (caseNo != null && caseNo != "") caseData['caseNo'] = caseNo;
+      if (party != null && party != "") caseData['party'] = party;
+      if (year != null && year != "") caseData['year'] = year;
+      if (stage != null && stage != "") caseData['stage'] = stage;
+      if (particular != null && particular != "")
+        caseData['particular'] = particular;
+      final url = Uri.parse(endpoint);
+      var response = await http.patch(
+        url,
+        body: jsonEncode(caseData),
+        headers: {
+          'accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
+      );
+      var resData = jsonDecode(response.body);
+      log(resData.toString());
+      fetchAndSetAllCases();
       ref.read(CaseStateNotifierProvider.notifier).setLoaderValue(false);
     } catch (err) {
       log(err.toString());

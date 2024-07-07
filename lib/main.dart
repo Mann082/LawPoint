@@ -4,6 +4,7 @@ import 'package:lawyers_diary/models/case.dart';
 import 'package:lawyers_diary/screens/HomePage.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lawyers_diary/screens/caseDetailsScreen.dart';
+import 'package:lawyers_diary/screens/editDetailsScreen.dart';
 import 'package:lawyers_diary/screens/newCase.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:lawyers_diary/screens/testScreen.dart';
@@ -36,7 +37,8 @@ class App extends StatelessWidget {
         HomePage.routeName: (context) => const HomePage(),
         NewCaseScreen.routeName: (context) => const NewCaseScreen(),
         Casedetailsscreen.routeName: (context) => const Casedetailsscreen(),
-        TestScreen.routeName: (context) => const TestScreen()
+        TestScreen.routeName: (context) => const TestScreen(),
+        EditCaseScreen.routeName: (context) => const EditCaseScreen()
       },
       initialRoute: HomePage.routeName,
       theme: ThemeData(

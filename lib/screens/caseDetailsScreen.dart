@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:lawyers_diary/models/case.dart';
 import 'package:lawyers_diary/providers/case_provider.dart';
+import 'package:lawyers_diary/screens/editDetailsScreen.dart';
 
 class Casedetailsscreen extends ConsumerStatefulWidget {
   static const routeName = "/CaseDetailScreen";
@@ -162,6 +163,33 @@ class _CasedetailsscreenState extends ConsumerState<Casedetailsscreen> {
                 ]),
               ],
             ),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 3),
+              child: MaterialButton(
+                  color: Colors.blue,
+                  elevation: 5,
+                  textColor: Colors.white,
+                  onPressed: () {
+                    Navigator.of(context)
+                        .pushReplacementNamed(EditCaseScreen.routeName);
+                  },
+                  child: const Center(
+                    child: Text("Edit Details"),
+                  )),
+            ),
+            (selectedCase!.nextDate == null)
+                ? Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 5),
+                    child: MaterialButton(
+                        color: Colors.blue,
+                        elevation: 5,
+                        textColor: Colors.white,
+                        onPressed: () {},
+                        child: const Center(
+                          child: Text("Add Next Date"),
+                        )),
+                  )
+                : const SizedBox()
           ],
         ),
       ),
